@@ -7,6 +7,8 @@ services:
       - "11434:11434"
     environment:
       - OLLAMA_HOST=0.0.0.0
+      # NVIDIA 런타임에 명시적으로 모든 GPU를 요청
+      - NVIDIA_VISIBLE_DEVICES=all
       # 긴 컨텍스트 대비 메모리 압박 시, 필요에 따라 활성화
       # - OLLAMA_KV_CACHE_TYPE=q8_0
     volumes:
@@ -15,22 +17,23 @@ services:
     command:                 # 인수를 리스트로 전달
       - "-lc"
       - |
-        if [ -z "$OLLAMA_USE_GPU" ]; then
-          if command -v nvidia-smi >/dev/null 2>&1; then
-            OLLAMA_USE_GPU="auto"
-            echo "[ollama] GPU detected via nvidia-smi -> OLLAMA_USE_GPU=auto"
-          elif [ -e /dev/nvidia0 ]; then
-            OLLAMA_USE_GPU="auto"
-            echo "[ollama] GPU device node found -> OLLAMA_USE_GPU=auto"
-          else
-            OLLAMA_USE_GPU="never"
-            echo "[ollama] No GPU detected -> OLLAMA_USE_GPU=never"
-          fi
+        # 외부 변수(OLLAMA_USE_GPU) 존재 여부와 상관없이 항상 GPU 감지 실행
+        if command -v nvidia-smi >/dev/null 2>&1; then
+          OLLAMA_USE_GPU="auto"
+          echo "[ollama] GPU detected via nvidia-smi -> OLLAMA_USE_GPU=auto"
+        elif [ -e /dev/nvidia0 ]; then
+          OLLAMA_USE_GPU="auto"
+          echo "[ollama] GPU device node found -> OLLAMA_USE_GPU=auto"
         else
-          echo "[ollama] OLLAMA_USE_GPU preset to $OLLAMA_USE_GPU"
+          OLLAMA_USE_GPU="never"
+          echo "[ollama] No GPU detected -> OLLAMA_USE_GPU=never"
         fi
+        
         export OLLAMA_USE_GPU
         exec /bin/ollama serve
+    
+    gpus: all
+
     healthcheck:
       test: ["CMD-SHELL", "OLLAMA_HOST=http://127.0.0.1:11434 ollama list >/dev/null 2>&1"]
       interval: 10s
@@ -48,25 +51,26 @@ services:
     environment:
       # 컨테이너 내부의 CLI가 ollama 서버에 붙도록 호스트 변경
       - OLLAMA_HOST=http://ollama:11434
-    command:                 # 인수를 리스트로 전달
+    command:
       - "-lc"
       - |
-        if [ -z "$OLLAMA_USE_GPU" ]; then
-          if command -v nvidia-smi >/dev/null 2>&1; then
-            OLLAMA_USE_GPU="auto"
-            echo "[model_init] GPU detected via nvidia-smi -> OLLAMA_USE_GPU=auto"
-          elif [ -e /dev/nvidia0 ]; then
-            OLLAMA_USE_GPU="auto"
-            echo "[model_init] GPU device node found -> OLLAMA_USE_GPU=auto"
-          else
-            OLLAMA_USE_GPU="never"
-            echo "[model_init] No GPU detected -> OLLAMA_USE_GPU=never"
-          fi
+        # 외부 변수(OLLAMA_USE_GPU) 존재 여부와 상관없이 항상 GPU 감지 실행
+        if command -v nvidia-smi >/dev/null 2>&1; then
+          OLLAMA_USE_GPU="auto"
+          echo "[model_init] GPU detected via nvidia-smi -> OLLAMA_USE_GPU=auto"
+        elif [ -e /dev/nvidia0 ]; then
+          OLLAMA_USE_GPU="auto"
+          echo "[model_init] GPU device node found -> OLLAMA_USE_GPU=auto"
         else
-          echo "[model_init] OLLAMA_USE_GPU preset to $OLLAMA_USE_GPU"
+          OLLAMA_USE_GPU="never"
+          echo "[model_init] No GPU detected -> OLLAMA_USE_GPU=never"
         fi
+        
         export OLLAMA_USE_GPU
         ollama pull sam860/exaone-4.0:1.2b || true
+
+    gpus: all
+
     restart: "no"
 
   # server_mcp:
