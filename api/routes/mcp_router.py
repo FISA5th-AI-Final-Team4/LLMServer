@@ -16,14 +16,6 @@ async def echo(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
     return payload
 
 
-# @router.post("/invoke-direct")
-# async def invoke_direct(prompt: str = Body(..., embed=True)) -> Any:
-#     """Response for the prompt directly without dispatching through MCP tools."""
-#     # TODO - LLM 연동
-
-#     return {"response": f"Direct response to prompt: {prompt}"}
-
-
 @router.post("/invoke", response_model=QueryResponse)
 def chat(req: QueryRequest):
     """
