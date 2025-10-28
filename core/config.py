@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     BACKEND_HOST: Optional[str] = None
     OLLAMA_MODEL_NAME: str
     OLLAMA_BASE_URL: str
-    MCP_SERVER_URL: str
+    # MCP_SERVER_URL: str
 
     model_config = SettingsConfigDict(
         env_file=".env",
