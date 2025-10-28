@@ -1,17 +1,19 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
 from typing import Optional
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # 시스템 환경변수 적용
-    BACKEND_HOST: Optional[str] = None
+    """애플리케이션 전역 설정을 관리한다."""
 
-    # .env 환경변수 파일 로드
+    BACKEND_HOST: Optional[str] = None
+    OLLAMA_MODEL_NAME: str
+    OLLAMA_BASE_URL: str
+    # MCP_SERVER_URL: str
+
     model_config = SettingsConfigDict(
         env_file=".env",
-        env_ignore_empty=True
+        env_ignore_empty=True,
     )
 
-# 변수로 저장하여 사용
 settings = Settings()
