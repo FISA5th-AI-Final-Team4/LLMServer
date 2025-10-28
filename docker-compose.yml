@@ -1,0 +1,88 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      # GPU를 탐지하더라도 우선 CPU 경로를 사용하도록 강제
+      - OLLAMA_USE_GPU=never
+      # 긴 컨텍스트 대비 메모리 압박 시, 필요에 따라 활성화
+      # - OLLAMA_KV_CACHE_TYPE=q8_0
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "OLLAMA_HOST=http://127.0.0.1:11434 ollama list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  # Ollama 서버가 뜬 뒤, 모델을 미리 받아놓는 1회성 Job
+  model_init:
+    image: ollama/ollama:latest
+    container_name: model_init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-lc"]
+    environment:
+      # 컨테이너 내부의 CLI가 ollama 서버에 붙도록 호스트 변경
+      - OLLAMA_HOST=http://ollama:11434
+      # 모델 다운로드 시에도 GPU 초기화를 시도하지 않도록 설정
+      - OLLAMA_USE_GPU=never
+    command: |
+      ollama pull sam860/exaone-4.0:1.2b || true
+    restart: "no"
+
+  # server_mcp:
+  #   build:
+  #     context: ./server_mcp
+  #     dockerfile: Dockerfile
+  #   container_name: server_mcp
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8001:8001"
+  #   environment:
+  #     # LangChain-Ollama가 붙을 주소 (server_mcp.py에서 base_url을 이 값으로 쓰고 싶다면 ENV 참조하도록 변경 가능)
+  #     - OLLAMA_BASE=http://ollama:11434
+  #   depends_on:
+  #     ollama:
+  #       condition: service_healthy
+  #     model_init:
+  #       condition: service_completed_successfully
+  #   healthcheck:
+  #     test: ["CMD", "bash", "-lc", "curl -sf http://127.0.0.1:8001/openapi.json >/dev/null || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 20
+
+  server_router:
+    build:
+      # context: ./server_router
+      context: .
+      dockerfile: Dockerfile
+    container_name: server_router
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - MCP_SERVER_URL=${MCP_SERVER_URL}
+    depends_on:
+      ollama:
+        condition: service_healthy
+      model_init:
+        condition: service_completed_successfully
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "curl -sf http://127.0.0.1:8000/openapi.json >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  ollama_models:
