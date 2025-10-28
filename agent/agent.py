@@ -13,7 +13,7 @@ from core.config import settings
 
 
 # MCP 서버의 MCP 엔드포인트 (호스트 머신의 MCP 서비스 사용)
-MCP_URL = settings.MCP_SERVER_URL
+# MCP_URL = settings.MCP_SERVER_URL
 OLLAMA_BASE_URL = settings.OLLAMA_BASE_URL
 OLLAMA_MODEL_NAME = settings.OLLAMA_MODEL_NAME
 
