@@ -36,14 +36,16 @@ services: # ------------------- Docker 서비스 정의 시작 -----------------
     entrypoint: ["/bin/sh"] # 컨테이너 실행 시 사용할 셸 지정
     environment:
       - OLLAMA_HOST=http://ollama:11434 # 연결할 Ollama 서버 (내부 네트워크 주소)
-      
+      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME} # 다운받을 LLM 모델명 (Ollma 서버 기준)
+
     # --- CPU 모드 강제 설정 ---
     command: # entrypoint 셸에서 실행할 명령어
       - "-lc"
       - |
         export OLLAMA_USE_GPU="never" # 모델 다운로드 시 GPU 사용 안 함
         echo "[model_init] Forcing CPU mode (OLLAMA_USE_GPU=never)" # 로그에 CPU 모드 명시
-        ollama pull sam860/exaone-4.0:1.2b || true # 모델 다운로드 (실패 시에도 다음 단계 진행)
+        echo "[model_init] Pulling model: ${OLLAMA_MODEL_NAME}" # 다운로드할 모델명 로그 출력
+        ollama pull ${OLLAMA_MODEL_NAME} || true # 모델 다운로드 (실패 시에도 다음 단계 진행)
     # --- 여기까지 ---
               
     restart: "no" # 작업 완료 후 재시작 안 함

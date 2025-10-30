@@ -4,9 +4,9 @@ from fastapi import APIRouter, Body
 
 from schemas.mcp_router import QueryRequest, QueryResponse
 
-from agent.agent import agent
+from agent.weather_agent import weather_agent
 
-router = APIRouter(prefix="/mcp-router", tags=["Query Routing"])
+router = APIRouter(tags=["MCP Client Dispatch"])
 
 
 @router.post("/echo")
@@ -16,7 +16,7 @@ async def echo(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
     return payload
 
 
-@router.post("/invoke", response_model=QueryResponse)
+@router.post("/dispatch-demo/weather", response_model=QueryResponse)
 def chat(req: QueryRequest):
     """
     사용자의 질문을 받아, 에이전트가 날씨가 필요하면 MCP Weather Tool(get_weather)을 호출,
@@ -32,7 +32,8 @@ def chat(req: QueryRequest):
     # LangChain의 ReAct 프롬프트에 힌트를 주기 위해 입력 앞에 붙입니다.
     user_q = f"{system_hint}\n\n질문: {req.query}"
 
-    result = agent.run(user_q)
+    result = weather_agent.run(user_q)
+    
     # weather_tool가 반환한 JSON 문자열을 에이전트가 그대로 포함할 수 있으므로,
     # 응답 가공(선택) — 간단히 그대로 반환
     return QueryResponse(answer=result)
