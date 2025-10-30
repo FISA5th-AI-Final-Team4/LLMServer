@@ -6,7 +6,7 @@ from schemas.mcp_router import QueryRequest, QueryResponse
 
 from agent.weather_agent import weather_agent
 
-router = APIRouter(prefix="/mcp-router", tags=["Query Routing"])
+router = APIRouter(tags=["MCP Client Dispatch"])
 
 
 @router.post("/echo")
