@@ -39,6 +39,7 @@ services: # ------------------- Docker 서비스 정의 시작 -----------------
     entrypoint: ["/bin/sh"] # 컨테이너 실행 시 사용할 셸 지정
     environment:
       - OLLAMA_HOST=http://ollama:11434 # 연결할 Ollama 서버 (내부 네트워크 주소)
+      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME} # 다운받을 LLM 모델명 (Ollma 서버 기준)
       - NVIDIA_VISIBLE_DEVICES=all      # [GPU] 컨테이너에 모든 NVIDIA GPU 할당
       
     # --- GPU 모드 강제 설정 ---
@@ -47,7 +48,7 @@ services: # ------------------- Docker 서비스 정의 시작 -----------------
       - |
         export OLLAMA_USE_GPU="auto" # [GPU] 모델 다운로드 시 GPU 자동 감지
         echo "[model_init] Forcing GPU mode (OLLAMA_USE_GPU=auto)" # 로그에 GPU 모드 명시
-        ollama pull sam860/exaone-4.0:1.2b || true # 모델 다운로드 (실패 시에도 다음 단계 진행)
+        ollama pull ${OLLAMA_MODEL_NAME} || true # 모델 다운로드 (실패 시에도 다음 단계 진행)
         
     gpus: all # [GPU] Docker가 GPU 런타임을 사용하도록 강제 (필수)
     # --- 여기까지 ---
