@@ -1,12 +1,12 @@
 from typing import Any
 
 from fastapi import APIRouter, Body
+from fastapi.responses import StreamingResponse
 
 from schemas.mcp_router import QueryRequest, QueryResponse
-
 from agent.weather_agent import weather_agent
 
-router = APIRouter(tags=["MCP Client Dispatch"])
+router = APIRouter(tags=["MCP Client Dispatch"], prefix="/mcp-router")
 
 
 @router.post("/echo")
@@ -20,7 +20,7 @@ async def echo(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
 def chat(req: QueryRequest):
     """
     사용자의 질문을 받아, 에이전트가 날씨가 필요하면 MCP Weather Tool(get_weather)을 호출,
-    아니면 LLM 자체 답변을 반환.
+    아니면 LLM 자체 답변을 반환. (스트리밍 X)
     """
     # 프롬프트 힌트: 도구 호출 기준을 LLM에 분명히 안내
     system_hint = (
@@ -29,14 +29,32 @@ def chat(req: QueryRequest):
         "그 외 일반 질문은 도구 없이 직접 답하세요. "
         "도구 인자는 city (예: 'Seoul', 'New York')."
     )
-    # LangChain의 ReAct 프롬프트에 힌트를 주기 위해 입력 앞에 붙입니다.
     user_q = f"{system_hint}\n\n질문: {req.query}"
 
+    # AgentRunner.run() (동기 메서드) 호출
     result = weather_agent.run(user_q)
     
-    # weather_tool가 반환한 JSON 문자열을 에이전트가 그대로 포함할 수 있으므로,
-    # 응답 가공(선택) — 간단히 그대로 반환
     return QueryResponse(answer=result)
+
+
+@router.post("/stream-dispatch")
+async def stream_dispatch(req: QueryRequest):
+    """
+    [비동기 스트리밍]
+    백엔드 서버로부터 채팅 요청을 받아, AgentRunner.arun() 제너레이터를 호출하고,
+    그 결과를 StreamingResponse로 중계(릴레이)합니다.
+    
+    이 스트림은 {type: ..., payload: ...} 형태의 JSON Line입니다.
+    """
+    print(f"LLM (Stream): 프롬프트 수신 -> '{req.query}'")
+    
+    # AgentRunner.arun()은 비동기 제너레이터입니다.
+    # StreamingResponse가 이 제너레이터를 순회하며
+    # yield된 각 항목(JSON Line)을 백엔드 서버로 전송합니다.
+    return StreamingResponse(
+        weather_agent.arun(req.query),
+        media_type="application/x-json-stream" # JSON Line 스트림
+    )
 
 
 @router.post("/dispatch")
