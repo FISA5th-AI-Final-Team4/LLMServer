@@ -194,13 +194,13 @@ class MCPCardRecommendationTool(BaseTool):
         
         async with httpx.AsyncClient() as client:
             try:
-                print(f"--- [CardTool] 요청 데이터: query={preprocessed.normalized_query}, retrieve_k=5, final_k=3 ---")
+                print(f"--- [CardTool] 요청 데이터: query={preprocessed.normalized_query}, retrieve_k=3, final_k=2 ---")
                 response = await client.post(
                     endpoint_url,
                     json={
                         "query": preprocessed.normalized_query,
-                        "retrieve_k": 5,
-                        "final_k": 3
+                        "retrieve_k": 3,  # 검색 결과 줄임
+                        "final_k": 2      # 최종 결과 줄임
                     },
                     timeout=300.0  # 타임아웃을 300초로 증가
                 )
