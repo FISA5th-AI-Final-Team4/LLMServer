@@ -194,6 +194,7 @@ class MCPCardRecommendationTool(BaseTool):
         
         async with httpx.AsyncClient() as client:
             try:
+                print(f"--- [CardTool] 요청 데이터: query={preprocessed.normalized_query}, retrieve_k=5, final_k=3 ---")
                 response = await client.post(
                     endpoint_url,
                     json={
@@ -204,6 +205,7 @@ class MCPCardRecommendationTool(BaseTool):
                     timeout=60.0
                 )
                 
+                print(f"--- [CardTool] 응답 상태 코드: {response.status_code} ---")
                 response.raise_for_status()
                 result_data = response.json()
                 
@@ -218,11 +220,14 @@ class MCPCardRecommendationTool(BaseTool):
                         card_name = doc.get("metadata", {}).get("card_name", "알 수 없음")
                         formatted_response += f"\n{i}. {card_name}"
                 
-                print(f"--- [CardTool] 3. 응답 완료 ---")
+                print(f"--- [CardTool] 3. 응답 완료 (길이: {len(formatted_response)}자) ---")
                 return formatted_response
                 
             except Exception as e:
+                import traceback
+                error_detail = traceback.format_exc()
                 print(f"--- [CardTool] ERROR: {e} ---")
+                print(f"--- [CardTool] ERROR 상세:\n{error_detail} ---")
                 return f"[카드 추천 오류: {e}]"
 
 
