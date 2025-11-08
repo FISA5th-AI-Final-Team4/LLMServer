@@ -504,8 +504,9 @@ class QueryRouterAgent:
                 print(f"--- [Agent] 인자: {tool_args} ---")
                 
                 if tool_name in self._tools:
-                    # Tool 실행
-                    result = self._tools[tool_name].run(**tool_args)
+                    # Tool 실행 - query 인자만 전달
+                    query_input = tool_args.get("query", "")
+                    result = self._tools[tool_name].run(query_input)
                     
                     print(f"--- [Agent] 3. Tool 실행 완료 ---")
                     print(f"{'#'*60}\n")
