@@ -202,7 +202,7 @@ class MCPCardRecommendationTool(BaseTool):
                         "retrieve_k": 5,
                         "final_k": 3
                     },
-                    timeout=120.0  # 타임아웃을 120초로 증가
+                    timeout=300.0  # 타임아웃을 300초로 증가
                 )
                 
                 print(f"--- [CardTool] 응답 상태 코드: {response.status_code} ---")
