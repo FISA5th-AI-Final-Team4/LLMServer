@@ -1,7 +1,10 @@
 """
 쿼리 라우터 에이전트 (LangChain Tool 기반)
-- 1단계: 쿼리 전처리 (Query Preprocessing)
-- 2단계: LangChain Tool 자동 선택 → MCP 서버 호출 (operation_id 매칭)
+
+실제 실행 순서:
+- 1단계: LangChain Tool 자동 선택 (LLM이 사용자 쿼리 분석)
+- 2단계: 선택된 Tool 내부에서 쿼리 전처리 (Query Preprocessing)
+- 3단계: 전처리된 쿼리로 MCP 서버 호출 (operation_id 매칭)
 """
 
 from langchain_ollama import ChatOllama
@@ -38,7 +41,7 @@ tool_selector_llm = ChatOllama(
 
 
 # =====================================================
-# 1단계: 쿼리 전처리 (Query Preprocessing)
+# 쿼리 전처리 함수 (Tool 내부에서 호출)
 # =====================================================
 
 def _preprocess_query_internal(query: str) -> PreprocessedQuery:
@@ -162,7 +165,9 @@ def _preprocess_query_internal(query: str) -> PreprocessedQuery:
 
 
 # =====================================================
-# 2단계: MCP Tools 정의 (operation_id 매칭)
+# MCP Tools 정의 (LangChain Tool 기반)
+# - Tool 선택 후, 각 Tool 내부에서 전처리 수행
+# - operation_id 자동 매칭으로 MCP 서버 호출
 # =====================================================
 
 # --- Tool 1: 카드 추천 RAG Tool ---
@@ -181,11 +186,11 @@ class MCPCardRecommendationTool(BaseTool):
     async def _arun(self, query: str) -> str:
         """MCP 서버의 카드 추천 RAG 파이프라인을 호출합니다."""
         
-        # 1단계: 쿼리 전처리
+        # Tool 내부 Step 1: 쿼리 전처리 (검색 최적화)
         print(f"--- [CardTool] 1. 쿼리 전처리 시작 ---")
         preprocessed = _preprocess_query_internal(query)
         
-        # 2단계: MCP 서버 호출
+        # Tool 내부 Step 2: MCP 서버 호출
         base_url = MCP_URL.replace('/mcp', '')
         endpoint_url = f"{base_url}/tools/card-recommendation"
         
@@ -433,16 +438,21 @@ class QueryRouterAgent:
     """
     LangChain Tool 기반 쿼리 라우터 에이전트
     
-    동작 방식:
-    1. 사용자 쿼리 입력
+    실제 실행 흐름:
+    1. 사용자 쿼리 입력 (원본 구어체 그대로)
     2. LLM이 적절한 Tool 자동 선택 (get_card_recommendation, analyze_consumption_pattern 등)
+       → Tool 선택은 구어체로 판단 (의도 파악 용이)
     3. 선택된 Tool 내부에서 쿼리 전처리 수행
-    4. MCP 서버 호출 (operation_id 자동 매칭)
+       → 검색 최적화된 형태로 변환
+    4. 전처리된 쿼리로 MCP 서버 호출 (operation_id 자동 매칭)
     5. 결과 반환
     
     사용 예시:
         agent = QueryRouterAgent()
         result = agent.run("편의점 많이 쓰는데 할인 카드 추천해줘")
+        # 1. Tool 선택: get_card_recommendation (구어체로 판단)
+        # 2. Tool 내부 전처리: "편의점 할인 카드 추천" (검색 최적화)
+        # 3. MCP 서버 호출
     """
     
     def __init__(self, tools: List[BaseTool]):
