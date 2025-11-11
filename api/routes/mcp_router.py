@@ -1,11 +1,20 @@
-from typing import Any
+from typing import List, Optional, Any
 
 from fastapi import APIRouter, Body
 from fastapi.responses import StreamingResponse
 
+from langchain_core.messages import (
+    HumanMessage,
+    AIMessage,
+    SystemMessage,
+    BaseMessage
+)
+
+from core.dep import AgentDep
+from core.model_config import SYSTEM_PROMPT
 from schemas.mcp_router import QueryRequest, QueryResponse
-from agent.weather_agent import weather_agent
-from agent.query_router_agent import query_router_agent
+# from agent.weather_agent import weather_agent
+# from agent.query_router_agent import query_router_agent
 
 router = APIRouter(tags=["MCP Client Dispatch"], prefix="/mcp-router")
 
@@ -59,8 +68,14 @@ async def stream_dispatch(req: QueryRequest):
 # 메인 디스패치 엔드포인트 (query_router_agent 사용)
 # =====================================================
 
+def pick_last_ai_text(messages: List[BaseMessage]) -> Optional[str]:
+    for m in reversed(messages or []):
+        if isinstance(m, AIMessage) or getattr(m, "type", "") == "ai":
+            return getattr(m, "content", "")
+    return None
+
 @router.post("/dispatch", response_model=QueryResponse)
-def dispatch(req: QueryRequest):
+async def dispatch(req: QueryRequest, agent: AgentDep):
     """
     [메인 디스패치] 쿼리 라우터 기반 자동 Tool 선택
     
@@ -88,10 +103,20 @@ def dispatch(req: QueryRequest):
     입력: "안녕하세요" → LLM 직접 답변
     """
     print(f"\n[/dispatch] 요청: {req.query}")
-    
-    result = query_router_agent.run(req.query)
-    
-    return QueryResponse(answer=result)
+
+    # history = get_history()
+    messages: List[BaseMessage] = [
+        SystemMessage(content=SYSTEM_PROMPT),
+        HumanMessage(content=req.query)
+    ]
+        # + history # 향후 대화형 히스토리 지원 시 활성화
+
+    # create_react_agent는 {"messages": [...]} 입력을 받습니다.
+    result = await agent.ainvoke({"messages": messages})
+    state_messages: List[BaseMessage] = result.get("messages", [])
+    ai_text = pick_last_ai_text(state_messages) or ""
+
+    return QueryResponse(answer=ai_text)
 
 
 # =====================================================
