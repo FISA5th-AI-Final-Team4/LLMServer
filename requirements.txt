@@ -145,11 +145,14 @@ langchain-core==1.0.1
     #   langchain
     #   langchain-classic
     #   langchain-community
+    #   langchain-mcp-adapters
     #   langchain-ollama
     #   langchain-text-splitters
     #   langgraph
     #   langgraph-checkpoint
     #   langgraph-prebuilt
+langchain-mcp-adapters==0.1.12
+    # via -r requirements.in
 langchain-ollama==1.0.0
     # via -r requirements.in
 langchain-text-splitters==1.0.0
@@ -178,7 +181,9 @@ markupsafe==3.0.3
 marshmallow==3.26.1
     # via dataclasses-json
 mcp==1.19.0
-    # via fastmcp
+    # via
+    #   fastmcp
+    #   langchain-mcp-adapters
 mdurl==0.1.2
     # via markdown-it-py
 more-itertools==10.8.0
@@ -338,6 +343,7 @@ typing-extensions==4.15.0
     #   exceptiongroup
     #   fastapi
     #   langchain-core
+    #   langchain-mcp-adapters
     #   openapi-core
     #   py-key-value-shared
     #   pydantic

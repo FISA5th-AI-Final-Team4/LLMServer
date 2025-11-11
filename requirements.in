@@ -9,3 +9,4 @@ langchain==1.0.2
 langchain-community==0.4.1
 langchain-ollama==1.0.0
 fastmcp==2.13.0.1
+langchain-mcp-adapters==0.1.12
