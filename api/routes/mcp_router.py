@@ -14,7 +14,7 @@ from core.dep import AgentDep
 from core.model_config import SYSTEM_PROMPT
 from schemas.mcp_router import QueryRequest, QueryResponse
 from core.trace_agent import pick_last_ai_text, _log_agent_trace
-
+from core.parse_tool import parse_tool_from_messages
 
 router = APIRouter(tags=["MCP Client Dispatch"], prefix="/mcp-router")
 
@@ -57,5 +57,9 @@ async def dispatch(req: QueryRequest, agent: AgentDep):
     state_messages: List[BaseMessage] = result.get("messages", [])
     _log_agent_trace(state_messages)
     ai_text = pick_last_ai_text(state_messages) or ""
+    tool_response = parse_tool_from_messages(state_messages)
 
-    return QueryResponse(answer=ai_text)
+    return QueryResponse(
+        answer=ai_text,
+        tool_response=tool_response
+    )
