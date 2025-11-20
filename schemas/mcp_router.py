@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 from enum import Enum
 
 
@@ -11,3 +11,4 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     """쿼리 응답"""
     answer: str
+    tool_response: Optional[Dict[str, Any]] = None
