@@ -32,27 +32,16 @@ async def dispatch(req: QueryRequest, agent: AgentDep):
     [메인 디스패치] 쿼리 라우터 기반 자동 Tool 선택
     
     실행 흐름:
-    1. 사용자 원본 쿼리 입력 (구어체 그대로)
-    2. LLM이 적절한 Tool 자동 선택 (원본 쿼리로 의도 파악)
-    3. 선택된 Tool 내부에서 쿼리 전처리 (검색 최적화)
-    4. 전처리된 쿼리로 MCP 서버 호출 (operation_id 자동 매칭)
-    5. 결과 반환
+    1. 사용자 쿼리 입력
+    2. LLM이 적절한 Tool 자동 선택
+    3. MCP 서버의 Tool 실행
+    4. 결과 반환
     
-    지원 Tool:
-    - get_card_recommendation: 카드 추천 (RAG 검색)
-    - analyze_consumption_pattern: 소비 패턴 분석 (준비 중)
-    - query_faq_database: FAQ 조회 (준비 중)
-    - 직접 답변: 일반 대화 (Tool 선택 안 함)
-    
-    예시:
-    입력: "편의점 많이 쓰는데 할인 카드 추천해줘"
-    → Tool 선택: get_card_recommendation (구어체로 의도 파악)
-    → 내부 전처리: "편의점 할인 카드 추천" (검색 최적화)
-    → MCP 호출 & 응답
-    
-    입력: "내 소비 패턴 분석해줘" → analyze_consumption_pattern Tool
-    입력: "이벤트 언제까지?" → query_faq_database Tool
-    입력: "안녕하세요" → LLM 직접 답변
+    지원 Tool (MCP 서버에서 제공):
+    - get_card_recommendation: 카드 추천
+    - analyze_consumption_pattern: 소비 패턴 분석
+    - query_faq_database: FAQ 조회
+    - 기타 MCP 서버에서 등록한 모든 Tool
     """
     print(f"\n[/dispatch] 요청: {req.query}")
 
