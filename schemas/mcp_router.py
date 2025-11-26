@@ -7,6 +7,7 @@ from enum import Enum
 class QueryRequest(BaseModel):
     """쿼리 요청"""
     query: str
+    session_id: Optional[str] = None
 
 class QueryResponse(BaseModel):
     """쿼리 응답"""
