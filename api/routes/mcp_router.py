@@ -1,7 +1,6 @@
 from typing import List, Optional, Any
 
 from fastapi import APIRouter, HTTPException, Body
-from fastapi.responses import StreamingResponse
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import (
@@ -16,6 +15,7 @@ from core.model_config import SYSTEM_PROMPT
 from schemas.mcp_router import QueryRequest, QueryResponse
 from core.trace_agent import pick_last_ai_text, _log_agent_trace
 from core.parse_tool import parse_tool_from_messages
+from core.history_store import get_history, persist_history
 
 
 router = APIRouter(tags=["MCP Client Dispatch"], prefix="/mcp-router")
@@ -64,7 +64,8 @@ async def dispatch(req: QueryRequest, agent: AgentDep):
     # 향후 대화 기록(History)이 필요하다면 여기서 messages 중간에 삽입합니다.
     if req.session_id:
         history = await get_history(req.session_id)
-        messages[1:1] = history
+        if history:
+            messages[1:1] = history
 
     # -----------------------------------------------------
     # 3. 에이전트 실행 (ainvoke)
@@ -95,6 +96,9 @@ async def dispatch(req: QueryRequest, agent: AgentDep):
     
     # 툴 실행 결과 파싱 (필요 시 클라이언트에 전달)
     tool_response = parse_tool_from_messages(state_messages)
+
+    if req.session_id:
+        await persist_history(req.session_id, state_messages)
 
     return QueryResponse(
         answer=ai_text,
