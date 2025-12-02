@@ -30,7 +30,7 @@ async def create_agent_app() -> Runnable:
     llm = ChatOllama(
         model=settings.OLLAMA_MODEL_NAME,
         base_url=settings.OLLAMA_BASE_URL,
-        temperature=0.3,
+        temperature=0.01,
         request_timeout=300.0
     )
 
