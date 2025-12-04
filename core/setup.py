@@ -1,0 +1,72 @@
+from fastapi import FastAPI
+from contextlib import asynccontextmanager
+
+from langchain_ollama import ChatOllama
+from langchain_core.runnables import Runnable
+from langchain.agents import create_agent
+from langchain_mcp_adapters.client import MultiServerMCPClient
+
+from core.dep import create_custom_agent
+from core.config import settings
+
+
+async def create_agent_app() -> Runnable:
+    """ MCP 클라이언트 연결 -> 툴 로드 -> Custom Agent 생성 """
+    
+    # 1. MCP 클라이언트 초기화
+    client = None
+    try:
+        client = MultiServerMCPClient({
+            "fisa-mcp": {
+                "url": settings.MCP_SERVER_URL,
+                "transport": "sse"
+            }
+        })
+        print("✅ MCP 클라이언트가 초기화되었습니다.")
+    except Exception as e:
+        print(f"⚠️ MCP 클라이언트 초기화 실패: {e}")
+
+    # 2. LLM 초기화
+    llm = ChatOllama(
+        model=settings.OLLAMA_MODEL_NAME,
+        base_url=settings.OLLAMA_BASE_URL,
+        temperature=0.01,
+        request_timeout=300.0
+    )
+
+    # 3. MCP 툴 로드
+    tools = []
+    if client:
+        try:
+            loaded = await client.get_tools()
+            loaded = loaded or []
+            
+            # 이름 중복 제거 로직
+            existing = {getattr(t, "name", None) for t in tools}
+            for t in loaded:
+                if getattr(t, "name", None) not in existing:
+                    tools.append(t)
+            if tools:
+                print(f"🔧 사용 도구: {[t.name for t in tools]}")
+            else:
+                print("⚠️ 사용할 도구가 없습니다.")
+        except Exception as e:
+            print(f"❌ MCP 서버 도구 로드 실패: {e}")
+    else:
+        print("⚠️ MCP 클라이언트가 없습니다. (툴 없이 동작 가능성 있음)")
+
+    # 4. 커스텀 에이전트 생성
+    agent = create_custom_agent(llm, tools)
+    
+    return agent
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """애플리케이션 수명 주기 관리"""
+    # 시작 시점: 에이전트 앱 생성
+    agent_instance = await create_agent_app()
+    app.state.agent = agent_instance
+    print("🚀 LLM쿼리 라우팅 서버가 시작되었습니다.")
+    yield
+    # 종료 시점: 정리 작업 (필요 시 추가)
+    print("🛑 LLM쿼리 라우팅 서버가 종료되었습니다.")

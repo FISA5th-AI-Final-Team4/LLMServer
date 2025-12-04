@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 
+from core.setup import lifespan
 from api.router import api_router
 
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 app.include_router(api_router, prefix="/llm")
 
 

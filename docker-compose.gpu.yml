@@ -67,6 +67,11 @@ services: # ------------------- Docker 서비스 정의 시작 -----------------
       - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME} # 사용할 모델 이름
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}     # 연결할 Ollama 서버 주소
       - MCP_SERVER_URL=${MCP_SERVER_URL}       # (주석처리됨) MCP 서버 주소
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2}         # LangChain V2 추적 활성화 여부
+      - LANGCHAIN_ENDPOINT=${LANGCHAIN_ENDPOINT}               # LangChain 추적 엔드포인트
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}                 # LangChain API 키
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT}                 # LangChain 프로젝트 이름
+      - LANGCHAIN_SESSION=${LANGCHAIN_SESSION}                 # LangChain 세션 이름
     depends_on: # 실행 순서 및 의존성 정의
       ollama: # 'ollama' 서비스에 의존
         condition: service_healthy # 'ollama'가 healthy 상태가 되면 실행
