@@ -6,11 +6,9 @@
 
 
 ## 🤖 LangGraph 에이전트 아키텍처
-
-| 설계 목적 | 아키텍처 |
-| ------ | ------ |
-| 경량 LLM 모델인 qwen3:1.7b를 Ollama로 호스팅하여 사용자 응답 속도를 높이고, MCP 툴 응답을 전달해 정확한 정보에 기반한 답변을 제공합니다. <br>LangGraph 기반 커스텀 에이전트를 설계하여, 정확한 UUID가 필요한 MCP 툴 호출 시 백엔드 서버에서 전달받은 세션 ID를 호출 인자에 자동 주입함으로써 툴 호출 오류를 차단했습니다. | 이미지 |
-
+- 경량 LLM 모델인 qwen3:1.7b를 Ollama로 호스팅하여 사용자 응답 속도를 높이고, MCP 툴 응답을 전달해 정확한 정보에 기반한 답변을 제공합니다.
+- LangGraph 기반 커스텀 에이전트를 설계하여, 정확한 UUID가 필요한 MCP 툴 호출 시 백엔드 서버에서 전달받은 세션 ID를 호출 인자에 자동 주입함으로써 툴 호출 오류를 차단했습니다.
+<img height="480" alt="image" src="https://github.com/user-attachments/assets/8d85e832-f533-45e0-8a5a-68f07554e909" />
 
 ## 🧾 엔드포인트
 - `POST /llm/mcp-router/dispatch`: 시스템 프롬프트 + 사용자 쿼리를 LangGraph 에이전트에 전달해 답변 및 `tool_response` 반환
