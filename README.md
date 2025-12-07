@@ -15,7 +15,7 @@
 - `POST /llm/mcp-router/echo`: 연결 확인용 에코
 
 ## ⚒️ 기술 스택
-- FastAPI, pydantic, 
+- FastAPI, pydantic
 
   <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=FastAPI&logoColor=white"/> <img src="https://img.shields.io/badge/pydantic-E92063?style=for-the-badge&logo=pydantic&logoColor=white"> 
 
